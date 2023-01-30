@@ -1,7 +1,7 @@
 mod prisma;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use prisma::user;
 use prisma::PrismaClient;
+use prisma::{company_data, interests, user};
 use prisma_client_rust::NewClientError;
 
 #[actix_web::main]
@@ -20,7 +20,14 @@ async fn hello() -> impl Responder {
 #[get("/api/getAllUsers")]
 async fn getAllUsers() -> impl Responder {
     let client = prisma::new_client().await.unwrap();
-    let users: Vec<user::Data> = client.user().find_many(vec![]).exec().await.unwrap();
+    let users: Vec<user::Data> = client
+        .user()
+        .find_many(vec![])
+        .with(user::interests::fetch())
+        .with(user::company_data::fetch())
+        .exec()
+        .await
+        .unwrap();
     let json = serde_json::to_string(&users).unwrap();
     HttpResponse::Ok().body(json)
 }
