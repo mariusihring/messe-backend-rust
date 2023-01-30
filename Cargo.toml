@@ -12,3 +12,4 @@ actix-web = "4.3.0"
 serde = "1.0.152"
 prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.4" }
 prisma-client-rust-cli = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.4" }
+tokio = {version = "1.25.0", features = ["full"]}

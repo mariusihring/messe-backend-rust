@@ -1,3 +1,8 @@
+mod prisma;
+
+use prisma::PrismaClient;
+use prisma_client_rust::NewClientError;
+
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 
 #[get("/")]
@@ -16,6 +21,7 @@ async fn manual_hello() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let client: Result<PrismaClient, NewClientError> = PrismaClient::_builder().build().await;
     HttpServer::new(|| {
         App::new()
             .service(hello)
