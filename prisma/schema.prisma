@@ -1,6 +1,6 @@
 generator client {
   provider = "cargo prisma"
-  output   = "../src/bin/prisma.rs"
+  output   = "../src/prisma.rs"
 }
 
 datasource db {
@@ -16,25 +16,25 @@ model Admin {
 }
 
 model CompanyData {
-  userID       Int      @unique
+  userID       Int     @unique
   isAssociated Boolean
   companyName  String
   companyEmail String
-  UserData     UserData @relation(fields: [userID], references: [id])
+  UserData     User    @relation(fields: [userID], references: [id])
 }
 
 model Interests {
-  userID         Int      @unique
+  userID         Int     @unique
   webDevelopment Boolean
   cyberSecurity  Boolean
   mobileDev      Boolean
   design         Boolean
   dataScience    Boolean
   coding         Boolean
-  UserData       UserData @relation(fields: [userID], references: [id])
+  UserData       User    @relation(fields: [userID], references: [id])
 }
 
-model UserData {
+model User {
   id          Int          @id @default(autoincrement())
   lastName    String
   firstName   String
