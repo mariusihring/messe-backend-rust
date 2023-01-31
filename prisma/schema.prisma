@@ -1,6 +1,6 @@
 generator client {
   provider = "cargo prisma"
-  output   = "../src/prisma.rs"
+  output   = "../src/routes/prisma.rs"
 }
 
 datasource db {
