@@ -1,0 +1,32 @@
+version: '3.0'
+ 
+services:
+  db:
+    image: mariadb:10.7
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+    restart: always
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - dbdata:/var/lib/local/mysql
+      
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: pma
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - ${PHPMYADMIN_PORT}:80
+
+volumes:
+  dbdata:

@@ -1,4 +1,6 @@
 mod prisma;
+use std::env;
+
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use prisma::PrismaClient;
 use prisma::{company_data, interests, user};

@@ -1583,18 +1583,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
 
 [[package]]
-name = "hello-world"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "prisma-client-rust",
- "prisma-client-rust-cli",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2148,6 +2136,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5de893c32cde5f383baa4c04c5d6dbdd735cfd4a794b0debdb2bb1b421da5ff4"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "messe-backend-rust"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "prisma-client-rust",
+ "prisma-client-rust-cli",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
