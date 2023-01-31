@@ -1,2 +1,4 @@
 [alias]
+main = "run --bin messe-backend-rust"
 prisma = "run --bin prisma  --"
+start = "watch -x 'main'"
