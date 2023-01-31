@@ -8,19 +8,18 @@ use prisma_client_rust::NewClientError;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| App::new().service(hello).service(getAllUsers))
+    HttpServer::new(|| App::new().service(hello).service(get_all_users))
         .bind(("127.0.0.1", 8080))?
         .run()
         .await
 }
 
-// All The Routes
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello World")
 }
 #[get("/api/getAllUsers")]
-async fn getAllUsers() -> impl Responder {
+async fn get_all_users() -> impl Responder {
     let client = prisma::new_client().await.unwrap();
     let users: Vec<user::Data> = client
         .user()
