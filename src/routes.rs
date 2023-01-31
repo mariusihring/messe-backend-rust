@@ -1,7 +1,6 @@
 mod prisma;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use prisma::user;
-use serde::Deserialize;
 
 #[get("/api/getAllUsers")]
 pub async fn get_all_users() -> impl Responder {
