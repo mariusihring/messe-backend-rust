@@ -1,10 +1,6 @@
 mod prisma;
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use prisma::PrismaClient;
-use prisma::{company_data, interests, user};
-use prisma_client_rust::NewClientError;
-use std::any::type_name;
-use std::env;
+use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use prisma::user;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
