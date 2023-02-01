@@ -1,6 +1,8 @@
 mod prisma;
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, post, web, web::Json, App, HttpResponse, HttpServer, Responder};
 use prisma::user;
+mod structs;
+use structs::NewUser;
 
 #[get("/api/getAllUsers")]
 pub async fn get_all_users() -> impl Responder {
@@ -32,3 +34,6 @@ pub async fn get_specific_user(user_id: web::Path<i32>) -> impl Responder {
     let json = serde_json::to_string(&user).unwrap();
     HttpResponse::Ok().body(json)
 }
+
+#[post("/api/createUser")]
+pub async fn create_new_user(body: Json<NewUser>) -> impl Responder {}
