@@ -28,3 +28,13 @@ pub struct Interests {
     pub dataScience: bool,
     pub coding: bool,
 }
+
+#[derive(Deserialize, Debug)]
+pub struct Info {
+    pub amount_user: i32,
+}
+#[derive(Deserialize, Debug)]
+pub struct Person {
+    pub name: String,
+    pub family_name: String,
+}

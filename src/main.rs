@@ -1,4 +1,4 @@
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{App, HttpServer};
 
 pub mod routes;
 

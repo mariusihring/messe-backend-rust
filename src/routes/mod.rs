@@ -1,15 +1,9 @@
 mod prisma;
-use std::{fs::File, io::BufReader};
 mod structs;
-use actix_web::{
-    get, post, web::Json, web::Path, App, HttpResponse, HttpServer, Responder, Result,
-};
+use actix_web::{get, post, web::Json, web::Path, HttpResponse, Responder};
 use prisma::user;
-use serde::Deserialize;
 use std::fs;
-use std::io::prelude::*;
-use std::io::{self, prelude::*};
-use structs::NewUser;
+use structs::{NewUser, Person};
 
 #[get("/api/getAllUsers")]
 pub async fn get_all_users() -> impl Responder {
@@ -42,26 +36,15 @@ pub async fn get_specific_user(user_id: Path<i32>) -> impl Responder {
     HttpResponse::Ok().body(json)
 }
 
-#[derive(Deserialize)]
-struct Info {
-    ammount_user: i32,
-}
-
-#[derive(Debug, Deserialize)]
-struct Person {
-    name: String,
-    family_name: String,
-}
-
 #[post("/api/generateData")]
-async fn generate_data(info: Json<Info>) -> impl Responder {
+async fn generate_data() -> impl Responder {
     let client = prisma::new_client().await.unwrap();
 
     let data = fs::read_to_string("./src/names.json").expect("Unable to read file");
 
     let person: Vec<Person> = serde_json::from_str(&data).expect("JSON was not well-formatted");
     for user in &person {
-        let new_user = client
+        client
             .user()
             .create(
                 user.family_name.to_owned(),
@@ -71,23 +54,14 @@ async fn generate_data(info: Json<Info>) -> impl Responder {
                 vec![],
             )
             .exec()
-            .await;
-
-        match new_user {
-            Ok(_) => HttpResponse::Ok(),
-            Err(_) => HttpResponse::Ok(),
-        };
+            .await
+            .unwrap();
     }
 
-    HttpResponse::Ok().body(format!("Welcome {}!", info.ammount_user))
+    HttpResponse::Ok().body("Users succesfully inserted!")
 }
 
 /// deserialize `Info` from request's body
-#[post("/submit")]
-async fn submit(info: Json<Info>) -> Result<String> {
-    Ok(format!("Welcome {}!", info.ammount_user))
-}
-
 #[post("/api/createUser")]
 pub async fn create_new_user(body: Json<NewUser>) -> impl Responder {
     HttpResponse::Ok()
