@@ -32,4 +32,3 @@ pub async fn get_specific_user(user_id: web::Path<i32>) -> impl Responder {
     let json = serde_json::to_string(&user).unwrap();
     HttpResponse::Ok().body(json)
 }
-
