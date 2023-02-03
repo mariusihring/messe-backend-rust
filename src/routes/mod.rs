@@ -1,7 +1,7 @@
 mod prisma;
 mod structs;
 use actix_web::{get, post, web::Json, web::Path, HttpResponse, Responder};
-use prisma::user;
+use prisma::{company_data, interests, user};
 use std::fs;
 use structs::{NewUser, Person};
 
@@ -63,6 +63,32 @@ async fn generate_data() -> impl Responder {
 
 /// deserialize `Info` from request's body
 #[post("/api/createUser")]
-pub async fn create_new_user(body: Json<NewUser>) -> impl Responder {
+pub async fn create_new_user(user: Json<NewUser>) -> impl Responder {
+    let client = prisma::new_client().await.unwrap();
+
+    let data = client
+        .user()
+        .create(
+            user.lastName.to_owned(),
+            user.firstName.to_owned(),
+            user.mail.to_owned(),
+            user.picture.to_owned(),
+            vec![
+                user::interests::set(
+                    interests::web_development::equals(user.interests.coding.to_owned()),
+                    interests::cyber_security::equals(user.interests.coding.to_owned()),
+                    interests::mobile_dev::equals(user.interests.coding.to_owned()),
+                    interests::design::equals(user.interests.coding.to_owned()),
+                    interests::data_science::equals(user.interests.coding.to_owned()),
+                    interests::coding::equals(user.interests.coding.to_owned()),
+                ),
+                company_data::is_associated::equals(user.company.isAssociated.to_owned()),
+                company_data::company_email::equals(user.company.companyEmail.to_owned()),
+                company_data::company_name::equals(user.company.companyName.to_owned()),
+            ],
+        )
+        .exec()
+        .await;
+
     HttpResponse::Ok()
 }
