@@ -3,7 +3,7 @@ mod structs;
 use actix_web::{get, post, web::Json, web::Path, HttpResponse, Responder};
 use prisma::{company_data, interests, user};
 use std::fs;
-use structs::{NewUser, Person};
+use structs::{DbUser, NewUser, Person};
 
 #[get("/api/getAllUsers")]
 pub async fn get_all_users() -> impl Responder {
@@ -20,13 +20,12 @@ pub async fn get_all_users() -> impl Responder {
     HttpResponse::Ok().body(json)
 }
 
-#[get("/api/getSpecificUser/{user_id}")]
-pub async fn get_specific_user(user_id: Path<i32>) -> impl Responder {
-    let user_id: i32 = user_id.to_owned();
+#[get("/api/getSpecificUser/{user_mail}")]
+pub async fn get_specific_user(user_mail: Path<String>) -> impl Responder {
     let client = prisma::new_client().await.unwrap();
     let user = client
         .user()
-        .find_first(vec![user::id::equals(user_id)])
+        .find_first(vec![user::mail::equals(user_mail.to_owned())])
         .with(user::interests::fetch())
         .with(user::company_data::fetch())
         .exec()
@@ -63,7 +62,7 @@ async fn generate_data() -> impl Responder {
 
 /// deserialize `Info` from request's body
 #[post("/api/createUser")]
-pub async fn create_new_user(user: Json<NewUser>) -> impl Responder {
+pub async fn create_new_user(user: Json<NewUser>) -> HttpResponse {
     let client = prisma::new_client().await.unwrap();
 
     let data = client
@@ -73,22 +72,76 @@ pub async fn create_new_user(user: Json<NewUser>) -> impl Responder {
             user.firstName.to_owned(),
             user.mail.to_owned(),
             user.picture.to_owned(),
-            vec![
-                user::interests::set(
-                    interests::web_development::equals(user.interests.coding.to_owned()),
-                    interests::cyber_security::equals(user.interests.coding.to_owned()),
-                    interests::mobile_dev::equals(user.interests.coding.to_owned()),
-                    interests::design::equals(user.interests.coding.to_owned()),
-                    interests::data_science::equals(user.interests.coding.to_owned()),
-                    interests::coding::equals(user.interests.coding.to_owned()),
-                ),
-                company_data::is_associated::equals(user.company.isAssociated.to_owned()),
-                company_data::company_email::equals(user.company.companyEmail.to_owned()),
-                company_data::company_name::equals(user.company.companyName.to_owned()),
-            ],
+            vec![],
         )
         .exec()
         .await;
 
-    HttpResponse::Ok()
+    match data {
+        Err(_) => {
+            return HttpResponse::Conflict()
+                .body("User allready exists, please use a different mail")
+        }
+        Ok(_) => {
+            let id = client
+                .user()
+                .find_first(vec![user::mail::equals(user.mail.to_string())])
+                .exec()
+                .await;
+            match id {
+                Err(_) => todo!(),
+                Ok(data) => match data {
+                    Some(db_data) => {
+                        let interests = client
+                            .interests()
+                            .create(
+                                user.interests.webDevelopment,
+                                user.interests.cyberSecurity,
+                                user.interests.mobileDev,
+                                user.interests.design,
+                                user.interests.dataScience,
+                                user.interests.coding,
+                                user::id::equals(db_data.id),
+                                vec![],
+                            )
+                            .exec()
+                            .await;
+                        match interests {
+                            Err(err) => {
+                                return HttpResponse::NotModified()
+                                    .body(format!("Error creating Interests: {}", err))
+                            }
+                            Ok(_) => {
+                                let company = client
+                                    .company_data()
+                                    .create(
+                                        user.company.isAssociated,
+                                        user.company.companyEmail.to_owned(),
+                                        user.company.companyName.to_owned(),
+                                        user::id::equals(db_data.id),
+                                        vec![],
+                                    )
+                                    .exec()
+                                    .await;
+
+                                match company {
+                                    Err(err) => {
+                                        return HttpResponse::NotModified()
+                                            .body(format!("Error creating Company Data: {}", err))
+                                    }
+                                    Ok(_) => {
+                                        return HttpResponse::Ok().body("Succesfully created User")
+                                    }
+                                };
+                            }
+                        }
+                    }
+                    None => {
+                        return HttpResponse::NotModified()
+                            .body("Error retreaving userid from db to create Relations")
+                    }
+                },
+            }
+        }
+    }
 }
