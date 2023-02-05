@@ -173,8 +173,18 @@ pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
         Ok(_) => {
             let updated_interests = client
                 .interests()
-                .update(
+                .upsert(
                     interests::user_id::equals(updatedUser.id),
+                    interests::create(
+                        updatedUser.interests.webDevelopment.to_owned(),
+                        updatedUser.interests.cyberSecurity.to_owned(),
+                        updatedUser.interests.mobileDev.to_owned(),
+                        updatedUser.interests.design.to_owned(),
+                        updatedUser.interests.dataScience.to_owned(),
+                        updatedUser.interests.coding.to_owned(),
+                        user::id::equals(updatedUser.id),
+                        vec![],
+                    ),
                     vec![
                         interests::web_development::set(updatedUser.interests.webDevelopment),
                         interests::cyber_security::set(updatedUser.interests.webDevelopment),
@@ -192,22 +202,23 @@ pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
                 Ok(_) => {
                     let updated_company = client
                         .company_data()
-                        .update(
+                        .upsert(
                             company_data::user_id::equals(updatedUser.id),
-                            vec![
-                                company_data::company_email::set(
-                                    updatedUser.company.companyEmail.to_owned(),
-                                ),
-                                company_data::company_name::set(
-                                    updatedUser.company.companyName.to_owned(),
-                                ),
-                                company_data::is_associated::set(updatedUser.company.isAssociated),
-                            ],
+                            company_data::create(
+                                updatedUser.company.isAssociated.to_owned(),
+                                updatedUser.company.companyName.to_owned(),
+                                updatedUser.company.companyEmail.to_owned(),
+                                user::id::equals(updatedUser.id),
+                                vec![],
+                            ),
+                            vec![],
                         )
                         .exec()
                         .await;
                     match updated_company {
-                        Ok(_) => return HttpResponse::Ok().body("done"),
+                        Ok(_) => {
+                            return HttpResponse::Ok().body("done");
+                        }
                         Err(err) => HttpResponse::NotModified().body(format!(
                             "User could not be modified because of the following error: {}",
                             err
