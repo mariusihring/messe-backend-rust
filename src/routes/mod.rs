@@ -1,6 +1,6 @@
-mod prisma;
+pub mod prisma;
 mod structs;
-use actix_web::{get, post, web::Json, web::Path, HttpResponse, Responder};
+use actix_web::{get, post,put, web::Json, web::Path, HttpResponse, Responder};
 use prisma::{company_data, interests, user};
 use std::fs;
 use structs::{DbUser, NewUser, Person};
@@ -29,10 +29,16 @@ pub async fn get_specific_user(user_mail: Path<String>) -> impl Responder {
         .with(user::interests::fetch())
         .with(user::company_data::fetch())
         .exec()
-        .await
-        .unwrap();
-    let json = serde_json::to_string(&user).unwrap();
-    HttpResponse::Ok().body(json)
+        .await;
+
+    match user {
+        Ok(data) => {
+            let json = serde_json::to_string(&data).unwrap();
+            HttpResponse::Ok().body(json)
+        },
+        Err(err) => HttpResponse::BadRequest().body(format!("Could not get user. Following Error occured: {}", err))
+    }
+
 }
 
 #[post("/api/generateData")]
@@ -143,5 +149,18 @@ pub async fn create_new_user(user: Json<NewUser>) -> HttpResponse {
                 },
             }
         }
+    }
+}
+#[put("/api/updateUser")]
+pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
+    let client = prisma::new_client().await.unwrap();
+    let updated_user = client
+        .user()
+        .update(user::id::equals(updatedUser.id), vec![])
+        .exec()
+        .await;
+    match updated_user {
+        Ok(_) => HttpResponse::Ok().body(format!("user {} successfully updated", updatedUser.id)),
+        Err(err) => HttpResponse::NotModified().body(format!("user could no be updated: {}", err))
     }
 }
