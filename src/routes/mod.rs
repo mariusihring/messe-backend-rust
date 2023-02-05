@@ -54,7 +54,7 @@ async fn generate_data() -> impl Responder {
             .create(
                 user.family_name.to_owned(),
                 user.name.to_owned(),
-                format!("{:?}@{:?}.com", &user, &user.family_name),
+                format!("{}@{}.com", user.name, user.family_name),
                 "231323123132131".to_owned(),
                 vec![],
             )
