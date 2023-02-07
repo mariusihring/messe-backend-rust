@@ -211,7 +211,17 @@ pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
                                 user::id::equals(updatedUser.id),
                                 vec![],
                             ),
-                            vec![],
+                            vec![
+                                company_data::is_associated::set(
+                                    updatedUser.company.isAssociated.to_owned(),
+                                ),
+                                company_data::company_name::set(
+                                    updatedUser.company.companyName.to_owned(),
+                                ),
+                                company_data::company_email::set(
+                                    updatedUser.company.companyEmail.to_owned(),
+                                ),
+                            ],
                         )
                         .exec()
                         .await;
