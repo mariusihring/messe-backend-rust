@@ -123,3 +123,13 @@ pub async fn delete_user(user_id: Path<i32>) -> impl Responder {
         .unwrap();
     HttpResponse::Ok().body(format!("user with id {} successfully deleted", user_id))
 }
+
+#[get("/api/numOfUsers")]
+pub async fn number_of_users() -> impl Responder {
+    let client = prisma::new_client().await.unwrap();
+    let data = client.user().count(vec![]).exec().await;
+    match data {
+        Ok(num) => HttpResponse::Ok().body(format!("{{ \"numOfUsers\": {} }}", num)),
+        Err(e) => HttpResponse::Ok().body(format!("{}", e)),
+    }
+}
