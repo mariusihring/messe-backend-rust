@@ -160,10 +160,9 @@ pub async fn delete_user(user_id: Path<i32>) -> impl Responder {
             vec![client
                 .company_data()
                 .delete(company_data::user_id::equals(user_id.to_owned()))],
-            vec![client
-                .user()
-                .delete(user::id::equals(user::id::equals(user_id.to_owned())))],
+            vec![client.user().delete(user::id::equals(user_id.to_owned()))],
         ))
-        .await?;
-    HttpResponse::Ok().body(format!("trying to delete user with mail: {}", user_id))
+        .await
+        .unwrap();
+    HttpResponse::Ok().body(format!("user with id {} successfully deleted", user_id))
 }
