@@ -1,6 +1,6 @@
 mod prisma;
 mod structs;
-use actix_web::{get, post, web::Json, web::Path, HttpResponse, Responder};
+use actix_web::{get, post, web::Json, web::Path, HttpResponse, Responder, delete};
 use prisma::{company_data, interests, user};
 use std::fs;
 use structs::{DbUser, NewUser, Person};
@@ -144,4 +144,8 @@ pub async fn create_new_user(user: Json<NewUser>) -> HttpResponse {
             }
         }
     }
+}
+#[delete("/api/deleteUser/{user_mail}")]
+pub async fn delete_user(user_mail: Path<String>) -> impl Responder {
+    HttpResponse::Ok().body(format!("trying to delete user with mail: {}", user_mail))
 }
