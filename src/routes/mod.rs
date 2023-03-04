@@ -1,9 +1,9 @@
 mod prisma;
 mod structs;
-use actix_web::{get, post, web::Json, web::Path, HttpResponse, Responder, delete};
+use actix_web::{delete, get, post, web::Json, web::Path, HttpResponse, Responder};
 use prisma::{company_data, interests, user};
 use std::fs;
-use structs::{DbUser, NewUser, Person};
+use structs::{DbInterests, DbUser, NewUser, Person};
 
 #[get("/api/getAllUsers")]
 pub async fn get_all_users() -> impl Responder {
@@ -145,7 +145,25 @@ pub async fn create_new_user(user: Json<NewUser>) -> HttpResponse {
         }
     }
 }
-#[delete("/api/deleteUser/{user_mail}")]
-pub async fn delete_user(user_mail: Path<String>) -> impl Responder {
-    HttpResponse::Ok().body(format!("trying to delete user with mail: {}", user_mail))
+#[delete("/api/deleteUser/{user_id}")]
+pub async fn delete_user(user_id: Path<i32>) -> impl Responder {
+    let client = prisma::new_client().await.unwrap();
+    let data: (
+        Vec<interests::Data>,
+        Vec<company_data::Data>,
+        Vec<user::Data>,
+    ) = client
+        ._batch((
+            vec![client
+                .interests()
+                .delete(interests::user_id::equals(user_id.to_owned()))],
+            vec![client
+                .company_data()
+                .delete(company_data::user_id::equals(user_id.to_owned()))],
+            vec![client
+                .user()
+                .delete(user::id::equals(user::id::equals(user_id.to_owned())))],
+        ))
+        .await?;
+    HttpResponse::Ok().body(format!("trying to delete user with mail: {}", user_id))
 }
