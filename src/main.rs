@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpServer};
+use actix_web::{guard, web, App, HttpServer};
 
 pub mod routes;
 use routes::{
@@ -9,24 +9,26 @@ use routes::{
 
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
-        App::new().service(
-            web::scope("/api")
-                .route("/getAllUsers", web::get().to(get_all_users))
-                .route(
-                    "/getSpecificUser/{user_mail}",
-                    web::get().to(get_specific_user),
-                )
-                .route("/generateData", web::post().to(generate_data))
-                .route("/createUser", web::post().to(create_new_user))
-                .route("/deleteUser/{user_id}", web::delete().to(delete_user))
-                .route("/numOfUsers", web::get().to(number_of_users))
-                .route("/numOfAssociates", web::get().to(number_of_associates))
-                .route("/numOfInterests", web::get().to(num_of_interest))
-                .route(
-                    "/usersBetweenDates/{start}-{end}",
-                    web::get().to(users_between_dates),
-                ),
-        )
+        App::new()
+            .service(
+                web::scope("/api")
+                    .guard(guard::Header("Admin", "true"))
+                    .route("/getAllUsers", web::get().to(get_all_users))
+                    .route(
+                        "/getSpecificUser/{user_mail}",
+                        web::get().to(get_specific_user),
+                    )
+                    .route("/generateData", web::post().to(generate_data))
+                    .route("/deleteUser/{user_id}", web::delete().to(delete_user))
+                    .route("/numOfUsers", web::get().to(number_of_users))
+                    .route("/numOfAssociates", web::get().to(number_of_associates))
+                    .route("/numOfInterests", web::get().to(num_of_interest))
+                    .route(
+                        "/usersBetweenDates/{start}-{end}",
+                        web::get().to(users_between_dates),
+                    ),
+            )
+            .service(web::scope("/api").route("/createUser", web::post().to(create_new_user)))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
