@@ -133,3 +133,12 @@ pub async fn number_of_users() -> impl Responder {
         Err(e) => HttpResponse::Ok().body(format!("{}", e)),
     }
 }
+#[get("/api/numOfAssociates")]
+pub async fn number_of_associates() -> impl Responder {
+    let client = prisma::new_client().await.unwrap();
+    let data = client.company_data().count(vec![]).exec().await;
+    match data {
+        Ok(num) => HttpResponse::Ok().body(format!("{{ \"numOfAssociates\": {} }}", num)),
+        Err(e) => HttpResponse::Ok().body(format!("{}", e)),
+    }
+}
