@@ -16,7 +16,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: install cargo watch
+      run: cargo install cargo-watch
     - name: Build
-      run: cargo build --verbose
+      run: cargo start
     - name: Run tests
       run: cargo test --verbose
