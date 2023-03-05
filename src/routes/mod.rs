@@ -4,7 +4,7 @@ use actix_web::{delete, get, post, web::Json, web::Path, HttpResponse, Responder
 use prisma::{company_data, interests, user};
 use prisma_client_rust::query_core::interpreter;
 use std::fs;
-use structs::{DbInterests, DbUser, NewUser, Person};
+use structs::{DbInterests, DbUser, Interests, NewUser, Person};
 
 #[get("/api/getAllUsers")]
 pub async fn get_all_users() -> impl Responder {
@@ -105,7 +105,7 @@ pub async fn create_new_user(user: Json<NewUser>) -> HttpResponse {
 #[delete("/api/deleteUser/{user_id}")]
 pub async fn delete_user(user_id: Path<i32>) -> impl Responder {
     let client = prisma::new_client().await.unwrap();
-    let data: (
+    let _data: (
         Vec<interests::Data>,
         Vec<company_data::Data>,
         Vec<user::Data>,
@@ -141,4 +141,39 @@ pub async fn number_of_associates() -> impl Responder {
         Ok(num) => HttpResponse::Ok().body(format!("{{ \"numOfAssociates\": {} }}", num)),
         Err(e) => HttpResponse::Ok().body(format!("{}", e)),
     }
+}
+#[get("/api/numOfInterests")]
+pub async fn num_of_interest() -> impl Responder {
+    let client = prisma::new_client().await.unwrap();
+    let (num_web_dev, num_cyber_sec, num_mobile_dev, num_design, num_data_science, num_coding): (
+        Vec<i64>,
+        Vec<i64>,
+        Vec<i64>,
+        Vec<i64>,
+        Vec<i64>,
+        Vec<i64>,
+    ) = client
+        ._batch((
+            vec![client
+                .interests()
+                .count(vec![interests::web_development::equals(true)])],
+            vec![client
+                .interests()
+                .count(vec![interests::cyber_security::equals(true)])],
+            vec![client
+                .interests()
+                .count(vec![interests::mobile_dev::equals(true)])],
+            vec![client
+                .interests()
+                .count(vec![interests::design::equals(true)])],
+            vec![client
+                .interests()
+                .count(vec![interests::data_science::equals(true)])],
+            vec![client
+                .interests()
+                .count(vec![interests::coding::equals(true)])],
+        ))
+        .await
+        .unwrap();
+    HttpResponse::Ok().body(format!("{{ \"webDevelopment\": {:?},\"cyberSecurity\": {:?},\"mobileDevelopment\": {:?},\"design\": {:?},\"dataScience\": {:?},\"coding\": {:?} }}",num_web_dev[0].to_owned(), num_cyber_sec[0].to_owned(), num_mobile_dev[0].to_owned(), num_design[0].to_owned(), num_data_science[0].to_owned(), num_coding[0].to_owned()))
 }
