@@ -1,10 +1,12 @@
 mod prisma;
 mod structs;
+mod subscription;
 use actix_web::{delete, get, post, web::Json, web::Path, HttpResponse, Responder};
 use prisma::{company_data, interests, user};
 use prisma_client_rust::query_core::interpreter;
 use std::fs;
 use structs::{DbInterests, DbUser, Interests, NewUser, Person};
+use subscription::notifySubscribers;
 
 pub async fn get_all_users() -> impl Responder {
     let client = prisma::new_client().await.unwrap();
@@ -96,7 +98,7 @@ pub async fn create_new_user(user: Json<NewUser>) -> HttpResponse {
         ))
         .await
         .unwrap();
-
+    notifySubscribers().await;
     HttpResponse::Ok().body(format!{"User for mail {} successfully created with id {}", created_user.mail, created_user.id})
 }
 
@@ -180,4 +182,16 @@ pub async fn users_between_dates(start: Path<String>, end: Path<String>) -> impl
         start.to_owned(),
         end.to_owned()
     ))
+}
+
+pub async fn subscribe(adress: Path<String>) -> impl Responder {
+    let client = prisma::new_client().await.unwrap();
+
+    let sub = client
+        .subscriber()
+        .create(adress.to_owned(), vec![])
+        .exec()
+        .await
+        .unwrap();
+    HttpResponse::Ok().body(format!("Subscriber with id: {} has been added", sub.id))
 }

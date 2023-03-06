@@ -1,5 +1,6 @@
 use actix_web::{guard, web, App, HttpServer};
-
+mod ws;
+use ws::index;
 pub mod routes;
 use routes::{
     create_new_user, delete_user, generate_data, get_all_users, get_specific_user, num_of_interest,
@@ -29,6 +30,7 @@ async fn main() -> std::io::Result<()> {
                     ),
             )
             .service(web::scope("/api").route("/createUser", web::post().to(create_new_user)))
+            .service(web::scope("/ws").route("/", web::get().to(index)))
     })
     .bind(("127.0.0.1", 8080))?
     .run()

@@ -44,3 +44,8 @@ model User {
   CompanyData CompanyData?
   Interests   Interests?
 }
+
+model Subscriber {
+  id  Int @id @default(autoincrement())
+  adress  String
+}
