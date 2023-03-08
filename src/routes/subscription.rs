@@ -1,11 +1,10 @@
 use crate::routes::prisma;
 use crate::routes::HttpResponse;
-use websocket::r#async::Client;
 use websocket::{ClientBuilder, OwnedMessage};
 
 use super::prisma::user;
 
-pub async fn notifySubscribers() -> HttpResponse {
+pub async fn notify_subscribers() -> HttpResponse {
     let client = prisma::new_client().await.unwrap();
     let users = client
         .user()
