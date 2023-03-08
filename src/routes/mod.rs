@@ -67,9 +67,7 @@ pub async fn generate_data() -> impl Responder {
             .create(
                 user.family_name.to_owned(),
                 user.name.to_owned(),
-
                 format!("{}@{}.com", &user.name, &user.family_name),
-
                 "231323123132131".to_owned(),
                 vec![],
             )
@@ -123,8 +121,6 @@ pub async fn create_new_user(user: Json<NewUser>) -> HttpResponse {
     HttpResponse::Ok().body(format!{"User for mail {} successfully created with id {}", created_user.mail, created_user.id})
 }
 
-
-
 pub async fn delete_user(user_id: Path<i32>) -> impl Responder {
     let client = prisma::new_client().await.unwrap();
     let _data: (
@@ -145,7 +141,6 @@ pub async fn delete_user(user_id: Path<i32>) -> impl Responder {
         .unwrap();
     HttpResponse::Ok().body(format!("user with id {} successfully deleted", user_id))
 }
-
 
 pub async fn number_of_users() -> impl Responder {
     let client = prisma::new_client().await.unwrap();
@@ -231,8 +226,7 @@ pub async fn unsubscribe(adress: Path<String>) -> impl Responder {
         .await
         .unwrap();
     HttpResponse::Ok().body(format!("User with adress: {} has been removed", adress))
-=======
-#[post("/api/updateUser")]
+}
 pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
     let client = prisma::new_client().await.unwrap();
     let updated_user_data = client
@@ -320,6 +314,4 @@ pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
             HttpResponse::NotModified().body(format!("user data could no be updated: {}", err))
         }
     }
-
-
 }
