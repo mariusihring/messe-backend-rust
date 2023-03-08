@@ -1,9 +1,11 @@
 pub mod prisma;
 mod structs;
+
 use actix_web::{get, post, put, web::Json, web::Path, HttpResponse, Responder};
+
 use prisma::{company_data, interests, user};
 use std::fs;
-use structs::{DbUser, NewUser, Person};
+use structs::{DbInterests, DbUser, NewUser, Person};
 
 #[get("/api/getAllUsers")]
 pub async fn get_all_users() -> impl Responder {
@@ -153,6 +155,28 @@ pub async fn create_new_user(user: Json<NewUser>) -> HttpResponse {
         }
     }
 }
+
+#[delete("/api/deleteUser/{user_id}")]
+pub async fn delete_user(user_id: Path<i32>) -> impl Responder {
+    let client = prisma::new_client().await.unwrap();
+    let data: (
+        Vec<interests::Data>,
+        Vec<company_data::Data>,
+        Vec<user::Data>,
+    ) = client
+        ._batch((
+            vec![client
+                .interests()
+                .delete(interests::user_id::equals(user_id.to_owned()))],
+            vec![client
+                .company_data()
+                .delete(company_data::user_id::equals(user_id.to_owned()))],
+            vec![client.user().delete(user::id::equals(user_id.to_owned()))],
+        ))
+        .await
+        .unwrap();
+    HttpResponse::Ok().body(format!("user with id {} successfully deleted", user_id))
+}
 #[post("/api/updateUser")]
 pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
     let client = prisma::new_client().await.unwrap();
@@ -241,4 +265,5 @@ pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
             HttpResponse::NotModified().body(format!("user data could no be updated: {}", err))
         }
     }
+
 }
