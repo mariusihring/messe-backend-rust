@@ -2,7 +2,8 @@ use actix_web::{App, HttpServer};
 
 pub mod routes;
 
-use routes::{delete_user, create_new_user, generate_data, get_all_users, get_specific_user};
+use routes::{create_new_user, generate_data, get_all_users, get_specific_user, update_user};
+
 #[tokio::main]
 
 async fn main() -> std::io::Result<()> {
@@ -13,6 +14,7 @@ async fn main() -> std::io::Result<()> {
             .service(create_new_user)
             .service(generate_data)
             .service(delete_user)
+            .service(update_user)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
