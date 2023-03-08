@@ -28,7 +28,6 @@ pub async fn get_all_users() -> impl Responder {
         .exec()
         .await
         .unwrap();
-    notify_subscribers().await;
     let json = serde_json::to_string(&users).unwrap();
     HttpResponse::Ok().body(json)
 }
@@ -117,7 +116,9 @@ pub async fn create_new_user(user: Json<NewUser>) -> HttpResponse {
         ))
         .await
         .unwrap();
+
     notify_subscribers().await;
+
     HttpResponse::Ok().body(format!{"User for mail {} successfully created with id {}", created_user.mail, created_user.id})
 }
 
