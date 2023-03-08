@@ -4,6 +4,7 @@ mod structs;
 use actix_web::{get, post, put, web::Json, web::Path, HttpResponse, Responder};
 
 use prisma::{company_data, interests, user};
+use prisma_client_rust::query_core::interpreter;
 use std::fs;
 use structs::{DbInterests, DbUser, NewUser, Person};
 
@@ -74,8 +75,7 @@ async fn generate_data() -> impl Responder {
 #[post("/api/createUser")]
 pub async fn create_new_user(user: Json<NewUser>) -> HttpResponse {
     let client = prisma::new_client().await.unwrap();
-
-    let data = client
+    let created_user = client
         .user()
         .create(
             user.lastName.to_owned(),
@@ -85,75 +85,32 @@ pub async fn create_new_user(user: Json<NewUser>) -> HttpResponse {
             vec![],
         )
         .exec()
-        .await;
+        .await
+        .unwrap();
+    let data: (Vec<company_data::Data>, Vec<interests::Data>) = client
+        ._batch((
+            vec![client.company_data().create(
+                user.company.isAssociated,
+                user.company.companyEmail.to_owned(),
+                user.company.companyName.to_owned(),
+                user::id::equals(created_user.id),
+                vec![],
+            )],
+            vec![client.interests().create(
+                user.interests.webDevelopment,
+                user.interests.cyberSecurity,
+                user.interests.mobileDev,
+                user.interests.design,
+                user.interests.dataScience,
+                user.interests.coding,
+                user::id::equals(created_user.id),
+                vec![],
+            )],
+        ))
+        .await
+        .unwrap();
 
-    match data {
-        Err(_) => {
-            return HttpResponse::Conflict()
-                .body("User allready exists, please use a different mail")
-        }
-        Ok(_) => {
-            let id = client
-                .user()
-                .find_first(vec![user::mail::equals(user.mail.to_string())])
-                .exec()
-                .await;
-            match id {
-                Err(_) => todo!(),
-                Ok(data) => match data {
-                    Some(db_data) => {
-                        let interests = client
-                            .interests()
-                            .create(
-                                user.interests.webDevelopment,
-                                user.interests.cyberSecurity,
-                                user.interests.mobileDev,
-                                user.interests.design,
-                                user.interests.dataScience,
-                                user.interests.coding,
-                                user::id::equals(db_data.id),
-                                vec![],
-                            )
-                            .exec()
-                            .await;
-                        match interests {
-                            Err(err) => {
-                                return HttpResponse::NotModified()
-                                    .body(format!("Error creating Interests: {}", err))
-                            }
-                            Ok(_) => {
-                                let company = client
-                                    .company_data()
-                                    .create(
-                                        user.company.isAssociated,
-                                        user.company.companyEmail.to_owned(),
-                                        user.company.companyName.to_owned(),
-                                        user::id::equals(db_data.id),
-                                        vec![],
-                                    )
-                                    .exec()
-                                    .await;
-
-                                match company {
-                                    Err(err) => {
-                                        return HttpResponse::NotModified()
-                                            .body(format!("Error creating Company Data: {}", err))
-                                    }
-                                    Ok(_) => {
-                                        return HttpResponse::Ok().body("Succesfully created User")
-                                    }
-                                };
-                            }
-                        }
-                    }
-                    None => {
-                        return HttpResponse::NotModified()
-                            .body("Error retreaving userid from db to create Relations")
-                    }
-                },
-            }
-        }
-    }
+    HttpResponse::Ok().body(format!{"User for mail {} successfully created with id {}", created_user.mail, created_user.id})
 }
 
 #[delete("/api/deleteUser/{user_id}")]
