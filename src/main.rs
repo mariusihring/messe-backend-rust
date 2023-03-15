@@ -1,4 +1,5 @@
 use actix_web::{guard, web, App, HttpServer};
+
 mod ws;
 use ws::index;
 pub mod routes;
@@ -6,6 +7,7 @@ pub mod routes;
 use routes::{
     create_new_user, delete_user, generate_data, get_all_users, get_specific_user, num_of_interest,
     number_of_associates, number_of_users, subscribe, unsubscribe, users_between_dates,
+
 };
 
 #[tokio::main]
@@ -13,6 +15,7 @@ use routes::{
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
+
 
             .service(
                 web::scope("/api")
@@ -32,6 +35,7 @@ async fn main() -> std::io::Result<()> {
                         web::get().to(users_between_dates),
                     ),
             )
+
             .service(
                 web::scope("/api")
                     .route("/createUser", web::post().to(create_new_user))
@@ -39,6 +43,7 @@ async fn main() -> std::io::Result<()> {
                     .route("/unsubscribe/{adress}", web::delete().to(unsubscribe)),
             )
             .service(web::scope("/ws").route("/", web::get().to(index)))
+
 
     })
     .bind(("127.0.0.1", 8080))?
