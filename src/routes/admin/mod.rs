@@ -8,7 +8,7 @@ pub async fn add_admin(login: Json<Login>) -> HttpResponse {
     let hash = hasher(login.password.to_owned()).await;
     let token = generate_token().await;
     let client = prisma::new_client().await.unwrap();
-    let admin = client
+    let admin: admin::Data = client
         .admin()
         .create(
             login.username.to_owned(),
@@ -20,13 +20,14 @@ pub async fn add_admin(login: Json<Login>) -> HttpResponse {
         .exec()
         .await
         .unwrap();
+
     HttpResponse::Ok().body(format!("{:?}", admin))
 }
 
 pub async fn authenticate_admin(login: Json<Login>) -> HttpResponse {
     let hash = hasher(login.password.to_owned()).await;
     let client = prisma::new_client().await.unwrap();
-    let user = client
+    let user: admin::Data = client
         .admin()
         .find_first(vec![
             admin::username::equals(login.username.to_owned()),
@@ -37,5 +38,9 @@ pub async fn authenticate_admin(login: Json<Login>) -> HttpResponse {
         .unwrap()
         .unwrap();
 
-    HttpResponse::Ok().body(format!("token: {:?}", user.auth_token))
+    let json = serde_json::json!({
+        "email": &user.email,
+        "token": &user.auth_token
+    });
+    HttpResponse::Ok().body(format!("{}", json))
 }

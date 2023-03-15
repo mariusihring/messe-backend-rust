@@ -4,6 +4,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 pub mod generat_data;
+pub mod guard;
 pub async fn generate_token() -> String {
     let mut rng = rand::thread_rng();
     let random_number: u64 = rng.gen();

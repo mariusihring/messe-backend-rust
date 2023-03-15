@@ -4,19 +4,28 @@ use ws::index;
 mod routes;
 use routes::admin::authenticate_admin;
 use routes::helper::generat_data::generate_data;
+use routes::helper::guard::check_token;
+use routes::prisma;
 use routes::subscribtion::{subscribe, unsubscribe};
 use routes::user_related::counts::{num_of_interest, number_of_associates, number_of_users};
 use routes::user_related::{
     create_new_user, delete_user, get_all_users, get_specific_user, users_between_dates,
 };
+
+pub static mut TOKENS: Vec<String> = Vec::new();
+
 #[tokio::main]
-//test test eteest
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
+    let client = prisma::new_client().await.unwrap();
+    let admins = client.admin().find_many(vec![]).exec().await.unwrap();
+    for a in admins {
+        unsafe { TOKENS.push(a.auth_token) }
+    }
+    HttpServer::new(move || {
         App::new()
             .service(
                 web::scope("/api")
-                    .guard(guard::Header("Admin", "true"))
+                    .guard(guard::fn_guard(check_token))
                     .route("/getAllUsers", web::get().to(get_all_users))
                     .route(
                         "/getSpecificUser/{user_mail}",
