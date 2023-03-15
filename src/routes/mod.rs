@@ -1,12 +1,24 @@
 pub mod prisma;
 mod structs;
 
-use actix_web::{get, post, put, web::Json, web::Path, HttpResponse, Responder};
+mod subscription;
+use actix_web::{
+    body::{BodyStream, MessageBody},
+    delete, get, post,
+    web::Json,
+    web::Path,
+    HttpRequest, HttpResponse, Responder,
+};
 
 use prisma::{company_data, interests, user};
 use prisma_client_rust::query_core::interpreter;
 use std::fs;
 use structs::{DbInterests, DbUser, Interests, NewUser, Person};
+
+use subscription::notify_subscribers;
+
+use self::prisma::subscriber::{self, adress};
+
 
 pub async fn get_all_users() -> impl Responder {
     let client = prisma::new_client().await.unwrap();
@@ -109,11 +121,11 @@ pub async fn create_new_user(user: Json<NewUser>) -> HttpResponse {
         .await
         .unwrap();
 
+    notify_subscribers().await;
+
     HttpResponse::Ok().body(format!{"User for mail {} successfully created with id {}", created_user.mail, created_user.id})
 }
 
-
-#[delete("/api/deleteUser/{user_id}")]
 
 pub async fn delete_user(user_id: Path<i32>) -> impl Responder {
     let client = prisma::new_client().await.unwrap();
@@ -135,8 +147,6 @@ pub async fn delete_user(user_id: Path<i32>) -> impl Responder {
         .unwrap();
     HttpResponse::Ok().body(format!("user with id {} successfully deleted", user_id))
 }
-
-
 
 pub async fn number_of_users() -> impl Responder {
     let client = prisma::new_client().await.unwrap();
@@ -199,8 +209,33 @@ pub async fn users_between_dates(start: Path<String>, end: Path<String>) -> impl
         end.to_owned()
     ))
 
+}
 
-#[post("/api/updateUser")]
+pub async fn subscribe(adress: Path<String>) -> impl Responder {
+    let client = prisma::new_client().await.unwrap();
+
+    let sub = client
+        .subscriber()
+        .create(adress.to_owned(), vec![])
+        .exec()
+        .await
+        .unwrap();
+    HttpResponse::Ok().body(format!("Subscriber with id: {} has been added", sub.id))
+}
+
+pub async fn unsubscribe(adress: Path<String>) -> impl Responder {
+    let client = prisma::new_client().await.unwrap();
+    let adress = adress.to_owned();
+
+    let _deleted_sub = client
+        .subscriber()
+        .find_first(vec![subscriber::adress::equals(adress.to_owned())])
+        .exec()
+        .await
+        .unwrap();
+    HttpResponse::Ok().body(format!("User with adress: {} has been removed", adress))
+}
+
 pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
     let client = prisma::new_client().await.unwrap();
     let updated_user_data = client
@@ -288,6 +323,5 @@ pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
             HttpResponse::NotModified().body(format!("user data could no be updated: {}", err))
         }
     }
-
 
 }
