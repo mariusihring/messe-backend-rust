@@ -65,3 +65,17 @@ pub struct Person {
     pub name: String,
     pub family_name: String,
 }
+#[derive(Serialize, Deserialize)]
+pub struct Login {
+    pub username: String,
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Admin {
+    username: String,
+    email: String,
+    password: String,
+    auth_token: String,
+}

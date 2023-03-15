@@ -4,19 +4,23 @@ mod structs;
 mod subscription;
 use actix_web::{
     body::{BodyStream, MessageBody},
-    delete, get, post,
+    delete,
+    error::ErrorHttpVersionNotSupported,
+    get, post,
     web::Json,
     web::Path,
     HttpRequest, HttpResponse, Responder,
 };
-
-use prisma::{company_data, interests, user};
+use prisma::{admin, company_data, interests, subscriber, user};
 use prisma_client_rust::query_core::interpreter;
-use std::fs;
-use structs::{DbInterests, DbUser, Interests, NewUser, Person};
+use rand::Rng;
+use std::{
+    collections::hash_map::DefaultHasher,
+    fs,
+    hash::{Hash, Hasher},
+};
+use structs::{DbInterests, DbUser, Interests, Login, NewUser, Person};
 use subscription::notify_subscribers;
-
-use self::prisma::subscriber::{self, adress};
 
 pub async fn get_all_users() -> impl Responder {
     let client = prisma::new_client().await.unwrap();
@@ -314,4 +318,55 @@ pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
             HttpResponse::NotModified().body(format!("user data could no be updated: {}", err))
         }
     }
+}
+pub async fn add_admin(login: Json<Login>) -> HttpResponse {
+    fn generate_token() -> String {
+        let mut rng = rand::thread_rng();
+        let random_number: u64 = rng.gen();
+        format!("{:016x}", random_number)
+    }
+    fn hasher(input: String) -> String {
+        let mut hasher = DefaultHasher::new();
+        input.hash(&mut hasher);
+        format!("{:x}", hasher.finish())
+    }
+    let hash = hasher(login.password.to_owned());
+    let token = generate_token();
+    let client = prisma::new_client().await.unwrap();
+    let admin = client
+        .admin()
+        .create(
+            login.username.to_owned(),
+            login.email.to_owned(),
+            hash,
+            token,
+            vec![],
+        )
+        .exec()
+        .await
+        .unwrap();
+    HttpResponse::Ok().body(format!("{:?}", admin))
+}
+
+pub async fn authenticate_user(login: Json<Login>) -> HttpResponse {
+    fn hasher(input: String) -> String {
+        let mut hasher = DefaultHasher::new();
+        input.hash(&mut hasher);
+        format!("{:x}", hasher.finish())
+    }
+
+    let hash = hasher(login.password.to_owned());
+    let client = prisma::new_client().await.unwrap();
+    let user = client
+        .admin()
+        .find_first(vec![
+            admin::username::equals(login.username.to_owned()),
+            admin::password::equals(hash.to_owned()),
+        ])
+        .exec()
+        .await
+        .unwrap()
+        .unwrap();
+
+    HttpResponse::Ok().body(format!("token: {:?}", user.auth_token))
 }

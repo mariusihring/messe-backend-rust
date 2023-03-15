@@ -4,8 +4,9 @@ use ws::index;
 pub mod routes;
 
 use routes::{
-    create_new_user, delete_user, generate_data, get_all_users, get_specific_user, num_of_interest,
-    number_of_associates, number_of_users, subscribe, unsubscribe, users_between_dates,
+    authenticate_user, create_new_user, delete_user, generate_data, get_all_users,
+    get_specific_user, num_of_interest, number_of_associates, number_of_users, subscribe,
+    unsubscribe, users_between_dates,
 };
 
 #[tokio::main]
@@ -13,7 +14,6 @@ use routes::{
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-
             .service(
                 web::scope("/api")
                     .guard(guard::Header("Admin", "true"))
@@ -35,11 +35,11 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/api")
                     .route("/createUser", web::post().to(create_new_user))
+                    .route("/login", web::post().to(authenticate_user))
                     .route("/subscribe/{adress}", web::put().to(subscribe))
                     .route("/unsubscribe/{adress}", web::delete().to(unsubscribe)),
             )
             .service(web::scope("/ws").route("/", web::get().to(index)))
-
     })
     .bind(("127.0.0.1", 8080))?
     .run()
