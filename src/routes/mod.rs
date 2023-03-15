@@ -137,6 +137,7 @@ pub async fn delete_user(user_id: Path<i32>) -> impl Responder {
 }
 
 
+
 pub async fn number_of_users() -> impl Responder {
     let client = prisma::new_client().await.unwrap();
     let data = client.user().count(vec![]).exec().await;
@@ -144,6 +145,7 @@ pub async fn number_of_users() -> impl Responder {
         Ok(num) => HttpResponse::Ok().body(format!("{{ \"numOfUsers\": {} }}", num)),
         Err(e) => HttpResponse::Ok().body(format!("{}", e)),
     }
+
 }
 
 pub async fn number_of_associates() -> impl Responder {
@@ -196,6 +198,7 @@ pub async fn users_between_dates(start: Path<String>, end: Path<String>) -> impl
         start.to_owned(),
         end.to_owned()
     ))
+
 
 #[post("/api/updateUser")]
 pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
@@ -285,5 +288,6 @@ pub async fn update_user(updatedUser: Json<DbUser>) -> HttpResponse {
             HttpResponse::NotModified().body(format!("user data could no be updated: {}", err))
         }
     }
+
 
 }
