@@ -4,4 +4,3 @@ pub mod prisma;
 pub mod structs;
 pub mod subscribtion;
 pub mod user_related;
-
