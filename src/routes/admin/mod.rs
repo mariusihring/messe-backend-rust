@@ -28,22 +28,28 @@ pub async fn add_admin(login: Json<Login>) -> HttpResponse {
 }
 
 pub async fn authenticate_admin(login: Json<Login>) -> HttpResponse {
-    let hash = hasher(login.password.to_owned()).await;
     let client = prisma::new_client().await.unwrap();
     let user: admin::Data = client
         .admin()
-        .find_first(vec![
-            admin::username::equals(login.username.to_owned()),
-            admin::password::equals(hash.to_owned()),
-        ])
+        .find_first(vec![admin::username::equals(login.username.to_owned())])
         .exec()
         .await
         .unwrap()
         .unwrap();
 
+    let hash = hasher(format!(
+        "{}{}",
+        login.password.to_owned(),
+        user.salt.to_owned()
+    ))
+    .await;
     let json = serde_json::json!({
         "email": &user.email,
         "token": &user.auth_token
     });
-    HttpResponse::Ok().body(format!("{}", json))
+    if hash == user.password {
+        HttpResponse::Accepted().body(format!("{}", json))
+    } else {
+        HttpResponse::Unauthorized().body("Not Authorized")
+    }
 }
