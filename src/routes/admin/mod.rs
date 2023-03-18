@@ -1,3 +1,4 @@
+use crate::routes::helper::admin::create_salt;
 use crate::routes::helper::{generate_token, hasher};
 use crate::routes::prisma::{self, admin};
 use crate::routes::structs::Login;
@@ -5,9 +6,10 @@ use actix_web::web::Json;
 use actix_web::HttpResponse;
 
 pub async fn add_admin(login: Json<Login>) -> HttpResponse {
-    let hash = hasher(login.password.to_owned()).await;
     let token = generate_token().await;
     let client = prisma::new_client().await.unwrap();
+    let salt: String = create_salt(10).await;
+    let hash = hasher(format!("{}{}", login.password.to_owned(), salt)).await;
     let admin: admin::Data = client
         .admin()
         .create(
@@ -15,6 +17,7 @@ pub async fn add_admin(login: Json<Login>) -> HttpResponse {
             login.email.to_owned(),
             hash,
             token,
+            salt,
             vec![],
         )
         .exec()

@@ -3,7 +3,7 @@ use actix_web::{guard, web, App, HttpServer};
 mod ws;
 use ws::index;
 mod routes;
-use routes::admin::authenticate_admin;
+use routes::admin::{add_admin, authenticate_admin};
 use routes::helper::generat_data::generate_data;
 use routes::helper::guard::check_token;
 use routes::prisma;
@@ -11,7 +11,6 @@ use routes::subscribtion::{subscribe, unsubscribe};
 use routes::user_related::counts::{num_of_interest, number_of_associates, number_of_users};
 use routes::user_related::{
     create_new_user, delete_user, get_all_users, get_specific_user, users_between_dates,
-
 };
 
 pub static mut TOKENS: Vec<String> = Vec::new();
@@ -41,9 +40,9 @@ async fn main() -> std::io::Result<()> {
                     .route(
                         "/usersBetweenDates/{start}-{end}",
                         web::get().to(users_between_dates),
-                    ),
+                    )
+                    .route("/addAdmin", web::put().to(add_admin)),
             )
-
             .service(
                 web::scope("/api")
                     .route("/createUser", web::post().to(create_new_user))

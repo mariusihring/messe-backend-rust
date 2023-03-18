@@ -3,6 +3,7 @@ use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
 };
+pub mod admin;
 pub mod generat_data;
 pub mod guard;
 pub async fn generate_token() -> String {
