@@ -11,7 +11,7 @@ impl Actor for MyWs {
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match msg {
-            Ok(ws::Message::Text(text)) => println!("{}", text),
+            Ok(ws::Message::Text(text)) => todo!(),
             _ => (),
         }
     }

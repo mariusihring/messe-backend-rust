@@ -9,10 +9,12 @@ datasource db {
 }
 
 model Admin {
-  id       String @id
-  name     String
-  email    String @unique
-  password String
+  id         Int    @id @default(autoincrement())
+  username   String
+  email      String @unique
+  password   String
+  auth_token String
+  salt       String
 }
 
 model CompanyData {
@@ -46,6 +48,6 @@ model User {
 }
 
 model Subscriber {
-  id  Int @id @default(autoincrement())
-  adress  String
+  id     Int    @id @default(autoincrement())
+  adress String
 }

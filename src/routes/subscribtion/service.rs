@@ -1,5 +1,5 @@
 use crate::routes::prisma;
-use crate::routes::HttpResponse;
+use actix_web::HttpResponse;
 use websocket::{ClientBuilder, OwnedMessage};
 
 use super::prisma::user;
